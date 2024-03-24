@@ -1,7 +1,6 @@
 # Ignore credentials and tokens
-credentials.json
-token.json
+.env
 
-# Ignore Node.js modules
+# Ignore Node.js module
 node_modules/
 

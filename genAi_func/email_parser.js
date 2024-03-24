@@ -1,7 +1,42 @@
 const fs = require('fs');
 const Anthropic = require("@anthropic-ai/sdk");
 const XLSX = require('xlsx');
-const credentials = require('../credentials.json');
+require('dotenv').config({path:'../.env'});
+const nodemailer = require('nodemailer');
+const { format } = require('date-fns');
+
+async function sendmail(){
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: 'paramjeetnpradhan@gmail.com',
+        pass: `${process.env.EMAIL_PASS}`
+    }
+  });
+  const date_now = format(new Date(), "d MMMM yyyy h:mm a")
+  const mailOptions = {
+    from: 'paramjeetnpradhan@gmail.com',
+    to: 'paramjeetpradhan00@gmail.com',
+    subject: `Real Estate report for ${date_now} `,
+    text: 'Real Estate Deal Report from YONATA',
+    attachments: [
+        {
+            filename: `Report_${date_now}`,
+            content: fs.readFileSync('./output.xlsx'),
+            contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        }
+    ]
+  };
+  
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+        console.error('Error sending email:', error);
+    } else {
+        console.log('Email sent:', info.response);
+    }
+  });
+  
+}
 
 
 let propertyData = [];
@@ -10,7 +45,7 @@ async function getParsedEmail(emails) {
    
     
   const anthropic = new Anthropic({
-    apiKey: credentials.claude_token.API_KEY
+    apiKey: process.env.CLAUDE_KEY
   });
   
   const filename = 'Email.csv';
@@ -148,6 +183,7 @@ async function getParsedEmail(emails) {
   const values = emails.map(obj => obj.body);
   // console.log(values);
 
+
   processEmails(values)
     .then(processedData => {
 
@@ -173,7 +209,11 @@ async function getParsedEmail(emails) {
     })
     .catch(error => {
       console.error('Error processing emails:', error);
-    });
+    }).then(
+      async ()=>{
+        await sendmail();
+      }
+    );
   return;
 }
 

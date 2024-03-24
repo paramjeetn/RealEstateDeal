@@ -7,26 +7,28 @@ const axios = require('axios');
 const { readLastDate } = require("./timefunc/time.js");
 const Anthropic = require("@anthropic-ai/sdk");
 const { getParsedEmail } = require("./genAi_func/email_parser.js");
-const credentials = require('./credentials.json');
+require('dotenv').config();
+
 
 
 const app = express();
 const PORT = 3000;
 
-const TOKEN_PATH = 'token.json';
+const TOKEN = process.env.REFRESH_TOKEN;
+// console.log(TOKEN);
 const LAST_DATE_PATH = 'lastDate.json';
 
 let oauth2Client;
 
 // Load or create the OAuth2 client
-if (fs.existsSync(TOKEN_PATH)) {
-    const tokens = JSON.parse(fs.readFileSync(TOKEN_PATH));
+if (TOKEN) {
+    
     oauth2Client = new OAuth2Client(
-        credentials.installed.client_id,
-        credentials.installed.client_secret,
-        credentials.installed.redirect_uris,
+        process.env.CLIENT_ID,
+        process.env.CLIENT_SECRET,
+        process.env.REDIRECT_URL,
     );
-    oauth2Client.setCredentials(tokens);
+    oauth2Client.setCredentials({refresh_token:TOKEN});
 } else {
     console.error('OAuth2 token not found. Please authenticate using /auth endpoint.');
     process.exit(1);
@@ -36,38 +38,38 @@ app.get("/", (req, res) => {
     res.send("Hello, you are welcome!");
 });
 
-app.get('/auth', (req, res) => {
-    const authUrl = oauth2Client.generateAuthUrl({
-        access_type: 'offline',
-        scope: [
-            'https://www.googleapis.com/auth/gmail.readonly',
-            'https://www.googleapis.com/auth/drive'
-        ],
-    });
-    res.redirect(authUrl);
-});
+// app.get('/auth', (req, res) => {
+//     const authUrl = oauth2Client.generateAuthUrl({
+//         access_type: 'offline',
+//         scope: [
+//             'https://www.googleapis.com/auth/gmail.readonly',
+//             'https://www.googleapis.com/auth/drive'
+//         ],
+//     });
+//     res.redirect(authUrl);
+// });
 
-app.get('/auth/callback', async (req, res) => {
-    const { code } = req.query;
-    try {
-        const { tokens } = await oauth2Client.getToken(code);
-        oauth2Client.setCredentials({ tokens });
-        console.log(tokens);
+// app.get('/auth/callback', async (req, res) => {
+//     const { code } = req.query;
+//     try {
+//         const { tokens } = await oauth2Client.getToken(code);
+//         oauth2Client.setCredentials({ tokens });
+//         console.log(tokens);
 
-        const refreshToken = tokens.refresh_token;
-        if (refreshToken) {
-            fs.writeFileSync(TOKEN_PATH, JSON.stringify({ refresh_token: refreshToken }));
-            res.send('Refresh token saved successfully!');
-        }
-        else {
-            res.send('Authentication successful! You can now use the stored refresh token.');
-        }
+//         const refreshToken = tokens.refresh_token;
+//         if (refreshToken) {
+//     fs.writeFileSync('.env', `REFRESH_TOKEN=${refreshToken}`);
+//             res.send('Refresh token saved successfully!');
+//         }
+//         else {
+//             res.send('Authentication successful! You can now use the stored refresh token.');
+//         }
 
-    } catch (error) {
-        console.error('Error:', error.message);
-        res.status(500).send(`Error decoding token: ${error.message}`);
-    }
-});
+//     } catch (error) {
+//         console.error('Error:', error.message);
+//         res.status(500).send(`Error decoding token: ${error.message}`);
+//     }
+// });
 
 
 const endpointUrl = "http://localhost:3000/get-gmail-data";
@@ -82,12 +84,12 @@ async function fetchData() {
 
 
 let lastStoredDateTime = readLastDate();
-
+console.log("lastdate",lastStoredDateTime);
 
 app.get('/get-gmail-data', async (req, res) => {
     try {
-        const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
-
+        const gmail = google.gmail({ version: 'v1', auth: await oauth2Client });
+        // console.log(gmail);
 
         let startDateInSeconds;
 
@@ -103,7 +105,7 @@ app.get('/get-gmail-data', async (req, res) => {
         } else {
             startDateInSeconds = null;
         }
-        console.log(startDateInSeconds);
+        console.log("startdate",startDateInSeconds);
 
         let msgParam = {
             userId: 'me',
