@@ -1,0 +1,10 @@
+{
+    "ignore": [
+      "lastDate.json",
+      "output.xlsx",
+      "token.json",
+      "credentials.json"
+
+    ]
+  }
+  
