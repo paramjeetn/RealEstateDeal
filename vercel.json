@@ -1,8 +1,0 @@
-{
-    "crons": [
-      {
-        "path": "/get-gmail-data",
-        "schedule": "0 4 * * *"
-      }
-    ]
-  }

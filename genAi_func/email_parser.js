@@ -1,59 +1,23 @@
-const fs = require('fs');
+// const fs = require('fs');
 const Anthropic = require("@anthropic-ai/sdk");
-const XLSX = require('xlsx');
-require('dotenv').config({path:'../.env'});
-const nodemailer = require('nodemailer');
-const { format } = require('date-fns');
-
-async function sendmail(){
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: 'paramjeetnpradhan@gmail.com',
-        pass: `${process.env.EMAIL_PASS}`
-    }
-  });
-  const date_now = format(new Date(), "d MMMM yyyy h:mm a")
-  const mailOptions = {
-    from: 'paramjeetnpradhan@gmail.com',
-    to: 'paramjeetpradhan00@gmail.com',
-    subject: `Real Estate report for ${date_now} `,
-    text: 'Real Estate Deal Report from YONATA',
-    attachments: [
-        {
-            filename: `Report_${date_now}`,
-            content: fs.readFileSync('./output.xlsx'),
-            contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        }
-    ]
-  };
-  
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-        console.error('Error sending email:', error);
-    } else {
-        console.log('Email sent:', info.response);
-    }
-  });
-  
-}
+// const XLSX = require('xlsx');
+require('dotenv').config({ path: '../.env' });
+// const {  saveToDrive }= require("../index")
 
 
-let propertyData = [];
+
 async function getParsedEmail(emails) {
   console.log("inside gen ai");
-   
-    
+
+
   const anthropic = new Anthropic({
     apiKey: process.env.CLAUDE_KEY
   });
-  
-  const filename = 'Email.csv';
+
 
   async function main(email) {
     console.log("inside main");
     try {
-
       const response = await anthropic.messages.create({
         model: "claude-3-sonnet-20240229",
         max_tokens: 3000,
@@ -63,7 +27,6 @@ async function getParsedEmail(emails) {
       });
 
       console.log('this is res', response);
-
       return response.content[0].text;
     } catch (error) {
       console.error('Error:', error);
@@ -73,6 +36,7 @@ async function getParsedEmail(emails) {
 
 
   function createPrompt(body) {
+    console.log("inside create prompt");
     const prompt = `
       ##################### Start Instructions
     
@@ -159,62 +123,38 @@ async function getParsedEmail(emails) {
   }
 
   async function processEmails(emails) {
-    console.log("inside process");
+    try {
+      const propertyData = [];
 
-    for (const email of emails) {
-      try {
-        const res = await main(email);
-        if (res) {
-          const responseLines = res.split('\n');
+      for (const email of emails) {
+        const result = await main(email);
+        if (result) {
+          // Process the result and add it to propertyData
+          // Same processing as before...
+
+          // Process the result
+          const responseLines = result.split('\n');
           const propertyAddressIndex = responseLines.findIndex(line => line.includes("Property Address", "Zip Code", "Wholesale Price (in $)", "After Repair Value - ARV (in $)", "Property Type", "Bedrooms", "Bathrooms", "Living Area (in sq ft)", "Notes"));
-
           const filteredLines = responseLines.slice(propertyAddressIndex + 1);
           filteredLines.forEach(line => propertyData.push(line + '\n'));
+          console.log("email being processed in for loop");
         }
-        console.log('Email data processed.');
-
-      } catch (error) {
-        console.error('Error processing email:', error);
       }
+
+      console.log('Email data processed.');
+      return propertyData;
+    } catch (error) {
+      console.error('Error processing emails:', error);
+      throw error;
     }
-    return propertyData;
   }
 
   const values = emails.map(obj => obj.body);
   // console.log(values);
 
 
-  processEmails(values)
-    .then(processedData => {
+  return processEmails(values);
 
-      const headerRow = ['"Property Address", "Zip Code", "Wholesale Price (in $)", "After Repair Value - ARV (in $)", "Property Type", "Bedrooms", "Bathrooms", "Living Area (in sq ft)", "Notes"\n'];
-      processedData.unshift(headerRow);
-      const csvLines = processedData.join('');
-      console.log(csvLines);
-      const parsedCSV = csvLines.split('\n').map(line => line.split(','));
-
-      var wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.aoa_to_sheet(parsedCSV);
-      XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
-      const excelFilePath = 'output.xlsx';
-      XLSX.writeFile(wb, excelFilePath, { bookType: 'xlsx' }, (err) => {
-        if (err) {
-          console.error('Error writing Excel file:', err);
-          return;
-        }
-        console.log('Excel file created successfully.');
-        return;
-      });
-
-    })
-    .catch(error => {
-      console.error('Error processing emails:', error);
-    }).then(
-      async ()=>{
-        await sendmail();
-      }
-    );
-  return;
 }
 
 module.exports = { getParsedEmail };
