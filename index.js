@@ -209,6 +209,9 @@ app.get('/get-gmail-data', async (req, res) => {
           console.error("Error fetching Gmail data:", error);
         });
       }
+      else{
+        res.send("No new Real Estate mails")
+      }
 
 
       // console.log(filteredEmails);
@@ -320,7 +323,7 @@ async function sendmail(buffer) {
   const date_now = format(new Date(), "d MMMM yyyy h:mm a")
   const mailOptions = {
     from: 'paramjeetnpradhan@gmail.com',
-    to: 'paramjeetpradhan00@gmail.com',
+    to: 'realestate.yonata@gmail.com',
     subject: `Real Estate report for ${date_now} `,
     text: 'Real Estate Deal Report from YONATA',
     attachments: [
