@@ -36,7 +36,7 @@ if (TOKEN) {
 }
 
 app.get("/", (req, res) => {
-  let date = new Date();
+  let date =Intl.DateTimeFormat().resolvedOptions().timeZone;
   res.send(date);
 });
 
@@ -129,6 +129,7 @@ app.get('/get-gmail-data', async (req, res) => {
 
   try {
     const gmail = google.gmail({ version: 'v1', auth: await oauth2Client });
+    
     let startDateInSeconds= await getDate();
 
     // if (lastStoredDateTime) {
