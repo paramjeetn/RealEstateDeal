@@ -17,10 +17,12 @@ async function getParsedEmail(emails) {
 
   async function main(email) {
     console.log("inside main");
+    const jsonString = JSON.stringify(email);
+    const characterCount = jsonString.length;
     try {
       const response = await anthropic.messages.create({
         model: "claude-3-sonnet-20240229",
-        max_tokens: 3000,
+        max_tokens: `${characterCount}`,
         messages: [
           { role: "user", content: createPrompt(email) }
         ]

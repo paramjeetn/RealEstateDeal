@@ -212,14 +212,14 @@ app.get('/get-gmail-data', async (req, res) => {
 
 
 
-      console.log("result", result);
+      // console.log("result", result);
       // res.send(result)
 
       const filteredEmails = filterEmailsByKeywords(result);
 
       // console.log("filtered mails" , filteredEmails);
       if (filteredEmails.length > 0) {
-        res.send("got emails");
+        res.status(200);
         // res.send(filterEmailsByKeywords)
         getParsedEmail(filteredEmails).then((propertyData) => {
           if (propertyData.length > 0) {
@@ -233,7 +233,7 @@ app.get('/get-gmail-data', async (req, res) => {
         });
       }
       else {
-        res.send("No Real estate mails received!");
+        res.status(200);
       }
 
 
@@ -292,7 +292,8 @@ async function toxlsx(propertyData) {
 
 function filterEmailsByKeywords(emails) {
   const filteredEmails = [];
-  const searchKeywords = ['bed', 'bath', 'family home', 'built in', 'sq.', 'ft.', 'beds', 'baths'];
+  const searchKeywords = ['bed', 'bath', 'family home', 'built in', 'sq.', 'ft.', 'beds', 'baths','Property Address','Address', 'Zip Code','Zip', 'Wholesale Price (in $)','Wholesale', 'After Repair Value - ARV (in $)', 'Property Type','Property', 'Bedrooms','Bedroom', 'Bathrooms','Bathroom', 'Living Area (in sq ft)'];
+  
 
   emails.forEach(email => {
     const words = email.body.toLowerCase().match(/\b\w+\b/g); // Match whole words
