@@ -8,12 +8,13 @@ const nodemailer = require('nodemailer');
 const { format } = require('date-fns');
 const exceljs = require('exceljs');
 const stream = require('stream');
+const { DateTime } = require('luxon');
 
 
 const app = express();
 const PORT = 3000;
 const TOKEN = process.env.REFRESH_TOKEN;
-const spreadsheetId = '1wAWX4d6aEp1-WQW9Yy5yItpCdcjs68XtQUbjnXW6WTA';
+const spreadsheetId = '1P_dziMn89vTkxivQ_i-YKXnGPb8KHEKp5XGRys-Flyo';
 const range = 'Sheet1!A1';
 
 // console.log(TOKEN);
@@ -72,22 +73,39 @@ app.get('/auth/callback', async (req, res) => {
 });
 
 
-const endpointUrl = "http://localhost:3000/get-gmail-data";
-async function fetchData() {
-  try {
-    const response = await axios.get(endpointUrl);
-    console.log('Response from the endpoint:', response.data);
-  } catch (error) {
-    console.error('Error calling the endpoint:', error.message);
-  }
-}
+
 async function getDate() {
   const sheets = google.sheets({ version: 'v4', auth: oauth2Client });
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId,
     range,
   });
-  lastDate = `${response.data.values[0][0]}`;
+let lastDate;
+  if(response.data.values && response.data.values[0][0]){
+      
+      const [datePart, timePart] = response.data.values[0][0].split(' ');
+      const [hours, minutes, seconds] = timePart.split(':').map(Number);
+      
+      // Get the current time on the client-side
+      const clientDateTime = new Date();
+      
+      
+      // Calculate the time zone offset on the client-side
+      const secTimeZone = (clientDateTime.getTimezoneOffset() * 60000) / 1000;
+      
+      // Convert date and time parts to Unix timestamp and add time zone offset
+      lastDate = Math.floor(new Date(datePart).getTime() / 1000) + secTimeZone + (hours * 60 * 60) + (minutes * 60) + seconds;
+      
+  }else{
+      const currentDateTime = new Date();
+
+      // Convert current time to seconds
+      const currentSeconds = Math.floor(currentDateTime.getTime() / 1000);
+
+      // Subtract total seconds for 24 hours (86400 seconds) from current time
+      lastDate = currentSeconds - 86400;
+  }
+  
   console.log(lastDate);
   return lastDate;
 }
@@ -109,23 +127,20 @@ async function writeDate(formattedLastDate) {
 app.get('/get-gmail-data', async (req, res) => {
 
   try {
-    let lastStoredDateTime = await getDate();
-    console.log(lastStoredDateTime, " ", typeof lastStoredDateTime);
     const gmail = google.gmail({ version: 'v1', auth: await oauth2Client });
-    // console.log(gmail);
-    let startDateInSeconds;
+    let startDateInSeconds= await getDate();
 
-    if (lastStoredDateTime) {
-      console.log("inside lastStoredDate")
-      const [datePart, timePart] = lastStoredDateTime.split(' ');
-      const [hours, minutes, seconds] = timePart.split(':').map(Number);
-      // console.log(new Date().getTimezoneOffset() * 60000);
-      const secTimeZone = (new Date().getTimezoneOffset() * 60000) / 1000;
-      startDateInSeconds = Math.floor(new Date(lastStoredDateTime[0]).getTime() / 1000) + secTimeZone + (hours * 60 * 60) + (minutes * 60) + (seconds);
-      // console.log(startDateInSeconds);
-    } else {
-      startDateInSeconds = null;
-    }
+    // if (lastStoredDateTime) {
+    //   console.log("inside lastStoredDate")
+    //   const [datePart, timePart] = lastStoredDateTime.split(' ');
+    //   const [hours, minutes, seconds] = timePart.split(':').map(Number);
+    //   // console.log(new Date().getTimezoneOffset() * 60000);
+    //   const secTimeZone = (new Date().getTimezoneOffset() * 60000) / 1000;
+    //   startDateInSeconds = Math.floor(new Date(lastStoredDateTime[0]).getTime() / 1000) + secTimeZone + (hours * 60 * 60) + (minutes * 60) + (seconds);
+    //   // console.log(startDateInSeconds);
+    // } else {
+    //   startDateInSeconds = null;
+    // }
     console.log("startdate", startDateInSeconds);
 
     let msgParam = {
@@ -150,9 +165,6 @@ app.get('/get-gmail-data', async (req, res) => {
       lastStoredDateTime = currentDate.toISOString();
       const formattedLastDate = lastStoredDateTime.slice(0, 19).replace('T', ' ');
       writeDate(formattedLastDate);
-
-
-
       res.send("No new mails received!");
     }
     else {
@@ -196,8 +208,10 @@ app.get('/get-gmail-data', async (req, res) => {
 
       console.log("result", result);
       const filteredEmails = filterEmailsByKeywords(result);
+      
       // console.log("filtered mails" , filteredEmails);
       if (filteredEmails.length > 0) {
+        res.json(filteredEmails);
         getParsedEmail(filteredEmails).then((propertyData) => {
           if (propertyData.length > 0) {
             console.log("got property data array from index.js", "\n");
@@ -210,12 +224,12 @@ app.get('/get-gmail-data', async (req, res) => {
         });
       }
       else{
-        res.send("No new Real Estate mails")
+        res.send("No Real estate mails received!");
       }
 
 
       // console.log(filteredEmails);
-      res.json(filteredEmails);
+      // res.json(filteredEmails);
     }
   } catch (error) {
     console.error('Error fetching Gmail data:', error.message);
@@ -286,10 +300,14 @@ function filterEmailsByKeywords(emails) {
 async function saveToDrive(buffer) {
   console.log("inside save to drive email parser");
   const drive = google.drive({ version: 'v3', auth: oauth2Client });
-  const date_now = format(new Date(), "d MMMM yyyy h:mm a")
+  const userTimeZone = 'America/Los_Angeles'; 
+  const currentTime = DateTime.now().setZone(userTimeZone);
+  const formattedTime = currentTime.toISO();
+  const [datePart, timePart] = formattedTime.split('T');
+//2024-03-28T23:19:12.899-07:00
   const requestBody = {
-    name: `Report_${date_now}.xlsx`,
-    parents: ['1lKYJu_64v99Q49vXag9xH6ptCkVL-Y9j'],
+    name: `Report_${datePart } ${timePart}.xlsx`,
+    parents: ['1RumiJTBUNRpZ5Zr67HB3MRceLi6h47fb'],
     fields: 'id',
 
   };
@@ -313,6 +331,10 @@ async function saveToDrive(buffer) {
 
 async function sendmail(buffer) {
   console.log("inside sendmail");
+  const userTimeZone = 'America/Los_Angeles'; 
+  const currentTime = DateTime.now().setZone(userTimeZone);
+  const formattedTime = currentTime.toISO();
+  const [datePart, timePart] = formattedTime.split('T');
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -320,15 +342,14 @@ async function sendmail(buffer) {
       pass: `${process.env.EMAIL_PASS}`
     }
   });
-  const date_now = format(new Date(), "d MMMM yyyy h:mm a")
   const mailOptions = {
-    from: 'paramjeetnpradhan@gmail.com',
-    to: 'realestate.yonata@gmail.com',
-    subject: `Real Estate report for ${date_now} `,
-    text: 'Real Estate Deal Report from YONATA',
+    from: 'realestate.yonata@gmail.com', 
+    to: 'realestate0428@yahoo.com',
+    subject: `YONATA: LISTING ANALYSIS  ${datePart } ${timePart} `,
+    text: 'Listing Analysis Report from YONATA',
     attachments: [
       {
-        filename: `Report_${date_now}`,
+        filename: `Report_${datePart } ${timePart}`,
         content: buffer,
         contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
       }
