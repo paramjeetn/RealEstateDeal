@@ -36,7 +36,8 @@ if (TOKEN) {
 }
 
 app.get("/", (req, res) => {
-  res.send("Hello, you are welcome!");
+  let date = new Date();
+  res.send(date);
 });
 
 app.get('/auth', (req, res) => {
