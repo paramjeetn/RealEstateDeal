@@ -290,9 +290,10 @@ async function toxlsx(propertyData) {
   });
 }
 
+
 function filterEmailsByKeywords(emails) {
   const filteredEmails = [];
-  const searchKeywords = ['bed', 'bath', 'family home', 'built in', 'sq.', 'ft.', 'beds', 'baths','Property Address','Address', 'Zip Code','Zip', 'Wholesale Price (in $)','Wholesale', 'After Repair Value - ARV (in $)', 'Property Type','Property', 'Bedrooms','Bedroom', 'Bathrooms','Bathroom', 'Living Area (in sq ft)'];
+  const searchKeywords = ['bed', 'bath', 'family home', 'built in', 'sq.', 'ft.', 'beds', 'baths','property address','address', 'zip code','zip', 'wholesale price (in $)','wholesale', 'after repair value - ARV (in $)', 'property type','property', 'bedrooms','bedroom', 'bathrooms','bathroom', 'living area (in sq ft)','sq','ft'];
   
 
   emails.forEach(email => {
