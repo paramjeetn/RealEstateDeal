@@ -212,16 +212,16 @@ app.get('/get-gmail-data', async (req, res) => {
       // console.log("filtered mails" , filteredEmails);
       if (filteredEmails.length > 0) {
         res.json(filteredEmails);
-        getParsedEmail(filteredEmails).then((propertyData) => {
-          if (propertyData.length > 0) {
-            console.log("got property data array from index.js", "\n");
-            console.log("calling toxlsx");
-            toxlsx(propertyData);
-          }
+        // getParsedEmail(filteredEmails).then((propertyData) => {
+        //   if (propertyData.length > 0) {
+        //     console.log("got property data array from index.js", "\n");
+        //     console.log("calling toxlsx");
+        //     toxlsx(propertyData);
+        //   }
 
-        }).catch((error) => {
-          console.error("Error fetching Gmail data:", error);
-        });
+        // }).catch((error) => {
+        //   console.error("Error fetching Gmail data:", error);
+        // });
       }
       else{
         res.send("No Real estate mails received!");
