@@ -5,7 +5,6 @@ const axios = require('axios');
 const { getParsedEmail } = require("./genAi_func/email_parser.js");
 require('dotenv').config();
 const nodemailer = require('nodemailer');
-const { format } = require('date-fns');
 const exceljs = require('exceljs');
 const stream = require('stream');
 const { DateTime } = require('luxon');
@@ -163,8 +162,8 @@ app.get('/get-gmail-data', async (req, res) => {
       msgParam.maxResults = 1;
 
     } else {
-      msgParam.q = `after:${startDateInSeconds}`;
-    }
+      msgParam.q = `in:anywhere to:realestate0428@yahoo.com after:${startDateInSeconds}`;
+        }
 
     const messages = await gmail.users.messages.list(msgParam);
     const result = [];
