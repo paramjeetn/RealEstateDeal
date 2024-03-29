@@ -120,7 +120,7 @@ const day = String(lastStoredDateTime.getDate()).padStart(2, '0');
 const hours = String(lastStoredDateTime.getHours()).padStart(2, '0');
 const minutes = String(lastStoredDateTime.getMinutes()).padStart(2, '0');
 const seconds = String(lastStoredDateTime.getSeconds()).padStart(2, '0');
-const formattedLastDate = `${year}-${month}-${day} ${hours}-${minutes}-${seconds}`;
+const formattedLastDate = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   const values = [[formattedLastDate]];
   const response = sheets.spreadsheets.values.update({
     spreadsheetId,
