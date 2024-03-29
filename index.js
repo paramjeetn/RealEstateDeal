@@ -157,7 +157,7 @@ app.get('/get-gmail-data', async (req, res) => {
       msgParam.maxResults = 1;
 
     } else {
-      msgParam.q = `in:all after:${startDateInSeconds}`;
+      msgParam.q = `after:${startDateInSeconds}`;
     }
 
     const messages = await gmail.users.messages.list(msgParam);
