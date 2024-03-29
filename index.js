@@ -36,7 +36,7 @@ if (TOKEN) {
 }
 
 app.get("/", (req, res) => {
-  let date =moment.tz.guess();
+  let date = moment.tz.guess();
 
   console.log("Your timezone is:", date);
   res.send(date);
@@ -83,37 +83,38 @@ async function getDate() {
     spreadsheetId,
     range,
   });
-let lastDate;
-  if(response.data.values && response.data.values[0][0]){
-      
-      const [datePart, timePart] = response.data.values[0][0].split(' ');
-      const [hours, minutes, seconds] = timePart.split(':').map(Number);
-      
-      // Get the current time on the client-side
-      const clientDateTime = new Date();
-      
-      
-      // Calculate the time zone offset on the client-side
-      const secTimeZone = (clientDateTime.getTimezoneOffset() * 60000) / 1000;
-      
-      // Convert date and time parts to Unix timestamp and add time zone offset
-      lastDate = Math.floor(new Date(datePart).getTime() / 1000) + secTimeZone + (hours * 60 * 60) + (minutes * 60) + seconds;
-      
-  }else{
-      const currentDateTime = new Date();
+  let lastDate;
+  if (response.data.values && response.data.values[0][0]) {
 
-      // Convert current time to seconds
-      const currentSeconds = Math.floor(currentDateTime.getTime() / 1000);
+    const [datePart, timePart] = response.data.values[0][0].split(' ');
+    const [hours, minutes, seconds] = timePart.split(':').map(Number);
 
-      // Subtract total seconds for 24 hours (86400 seconds) from current time
-      lastDate = currentSeconds - 86400;
+    // Get the current time on the client-side
+    const clientDateTime = new Date();
+
+
+    // Calculate the time zone offset on the client-side
+    const secTimeZone = (clientDateTime.getTimezoneOffset() * 60000) / 1000;
+
+    // Convert date and time parts to Unix timestamp and add time zone offset
+    lastDate = Math.floor(new Date(datePart).getTime() / 1000) + secTimeZone + (hours * 60 * 60) + (minutes * 60) + seconds;
+
+  } else {
+    const currentDateTime = new Date().toLocaleString('en-US', { timeZone: 'Africa/Abidjan' });
+    // Convert current time to seconds
+    const currentSeconds = Math.floor(currentDateTime.getTime() / 1000);
+    // Subtract total seconds for 24 hours (86400 seconds) from current time
+    lastDate = currentSeconds - 3600;
   }
-  
+
   console.log(lastDate);
   return lastDate;
 }
-async function writeDate(formattedLastDate) {
+async function writeDate() {
   const sheets = google.sheets({ version: 'v4', auth: oauth2Client });
+  const currentDate = new Date().toLocaleString('en-US', { timeZone: 'Africa/Abidjan' });
+  lastStoredDateTime = currentDate;
+  const formattedLastDate = lastStoredDateTime.slice(0, 19).replace('T', ' ');
   const values = [[formattedLastDate]];
   const response = sheets.spreadsheets.values.update({
     spreadsheetId,
@@ -131,8 +132,8 @@ app.get('/get-gmail-data', async (req, res) => {
 
   try {
     const gmail = google.gmail({ version: 'v1', auth: await oauth2Client });
-    
-    let startDateInSeconds= await getDate();
+
+    let startDateInSeconds = await getDate();
 
     // if (lastStoredDateTime) {
     //   console.log("inside lastStoredDate")
@@ -165,10 +166,8 @@ app.get('/get-gmail-data', async (req, res) => {
 
     if (!messageList) {
 
-      const currentDate = new Date(Date.now() - (new Date().getTimezoneOffset() * 60000));
-      lastStoredDateTime = currentDate.toISOString();
-      const formattedLastDate = lastStoredDateTime.slice(0, 19).replace('T', ' ');
-      writeDate(formattedLastDate);
+
+      writeDate();
       res.send("No new mails received!");
     }
     else {
@@ -202,17 +201,15 @@ app.get('/get-gmail-data', async (req, res) => {
         result.push(messageInfo);
       }
 
-      const currentDate = new Date(Date.now() - (new Date().getTimezoneOffset() * 60000));
-      lastStoredDateTime = currentDate.toISOString();
-      const formattedLastDate = lastStoredDateTime.slice(0, 19).replace('T', ' ');
-      writeDate(formattedLastDate);
+
+      writeDate();
 
 
 
 
       console.log("result", result);
       const filteredEmails = filterEmailsByKeywords(result);
-      
+
       // console.log("filtered mails" , filteredEmails);
       if (filteredEmails.length > 0) {
         res.json(filteredEmails);
@@ -227,7 +224,7 @@ app.get('/get-gmail-data', async (req, res) => {
         //   console.error("Error fetching Gmail data:", error);
         // });
       }
-      else{
+      else {
         res.send("No Real estate mails received!");
       }
 
@@ -304,13 +301,13 @@ function filterEmailsByKeywords(emails) {
 async function saveToDrive(buffer) {
   console.log("inside save to drive email parser");
   const drive = google.drive({ version: 'v3', auth: oauth2Client });
-  const userTimeZone = 'America/Los_Angeles'; 
+  const userTimeZone = 'America/Los_Angeles';
   const currentTime = DateTime.now().setZone(userTimeZone);
   const formattedTime = currentTime.toISO();
   const [datePart, timePart] = formattedTime.split('T');
-//2024-03-28T23:19:12.899-07:00
+  //2024-03-28T23:19:12.899-07:00
   const requestBody = {
-    name: `Report_${datePart } ${timePart}.xlsx`,
+    name: `Report_${datePart} ${timePart}.xlsx`,
     parents: ['1RumiJTBUNRpZ5Zr67HB3MRceLi6h47fb'],
     fields: 'id',
 
@@ -335,7 +332,7 @@ async function saveToDrive(buffer) {
 
 async function sendmail(buffer) {
   console.log("inside sendmail");
-  const userTimeZone = 'America/Los_Angeles'; 
+  const userTimeZone = 'America/Los_Angeles';
   const currentTime = DateTime.now().setZone(userTimeZone);
   const formattedTime = currentTime.toISO();
   const [datePart, timePart] = formattedTime.split('T');
@@ -347,13 +344,13 @@ async function sendmail(buffer) {
     }
   });
   const mailOptions = {
-    from: 'realestate.yonata@gmail.com', 
+    from: 'realestate.yonata@gmail.com',
     to: 'realestate0428@yahoo.com',
-    subject: `YONATA: LISTING ANALYSIS  ${datePart } ${timePart} `,
+    subject: `YONATA: LISTING ANALYSIS  ${datePart} ${timePart} `,
     text: 'Listing Analysis Report from YONATA',
     attachments: [
       {
-        filename: `Report_${datePart } ${timePart}`,
+        filename: `Report_${datePart} ${timePart}`,
         content: buffer,
         contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
       }
