@@ -9,7 +9,7 @@ const { format } = require('date-fns');
 const exceljs = require('exceljs');
 const stream = require('stream');
 const { DateTime } = require('luxon');
-
+const moment = require('moment-timezone');
 
 const app = express();
 const PORT = 3000;
@@ -36,7 +36,9 @@ if (TOKEN) {
 }
 
 app.get("/", (req, res) => {
-  let date =Intl.DateTimeFormat().resolvedOptions().timeZone;
+  let date =moment.tz.guess();
+
+  console.log("Your timezone is:", timezone);
   res.send(date);
 });
 
