@@ -38,7 +38,7 @@ if (TOKEN) {
 app.get("/", (req, res) => {
   let date =moment.tz.guess();
 
-  console.log("Your timezone is:", timezone);
+  console.log("Your timezone is:", date);
   res.send(date);
 });
 
