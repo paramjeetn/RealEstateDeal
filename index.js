@@ -163,7 +163,7 @@ app.get('/get-gmail-data', async (req, res) => {
       msgParam.maxResults = 1;
 
     } else {
-      msgParam.q = `after:${startDateInSeconds} in:anywhere`;
+      msgParam.q = `after:${startDateInSeconds}`;
     }
 
     const messages = await gmail.users.messages.list(msgParam);
@@ -214,11 +214,13 @@ app.get('/get-gmail-data', async (req, res) => {
 
 
       console.log("result", result);
+      // res.send(result)
+
       const filteredEmails = filterEmailsByKeywords(result);
 
       // console.log("filtered mails" , filteredEmails);
       if (filteredEmails.length > 0) {
-        res.json("got emails");
+        res.send("got emails");
         // res.send(filterEmailsByKeywords)
         getParsedEmail(filteredEmails).then((propertyData) => {
           if (propertyData.length > 0) {
