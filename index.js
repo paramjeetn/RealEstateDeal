@@ -219,7 +219,7 @@ app.get('/get-gmail-data', async (req, res) => {
 
       // console.log("filtered mails" , filteredEmails);
       if (filteredEmails.length > 0) {
-        res.status(200);
+        res.status(200).send("Request processed successfully!");
         // res.send(filterEmailsByKeywords)
         getParsedEmail(filteredEmails).then((propertyData) => {
           if (propertyData.length > 0) {
@@ -233,7 +233,7 @@ app.get('/get-gmail-data', async (req, res) => {
         });
       }
       else {
-        res.status(200);
+        res.status(200).send("No real estate found");
       }
 
 
