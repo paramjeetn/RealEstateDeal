@@ -1,0 +1,13 @@
+name: Periodic HTTP Request
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+
+jobs:
+  http_request:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send HTTP Request
+        run: |
+          curl -X GET https://realestatedeal-d22v.onrender.com/get-gmail-data
