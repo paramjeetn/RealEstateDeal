@@ -227,7 +227,7 @@ app.get('/get-gmail-data', async (req, res) => {
         });
       }
       else {
-        res.status(200).send("Less than 3 or no real estate data");
+        res.status(200).send("Less than 2 or no real estate data");
       }
 
       // console.log(filteredEmails);
