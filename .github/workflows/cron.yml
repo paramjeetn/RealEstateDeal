@@ -10,4 +10,4 @@ jobs:
     steps:
       - name: Send HTTP Request
         run: |
-          curl -X GET https://realestatedeal-d22v.onrender.com/get-gmail-data
+          curl -X GET https://realestatedeal-1.onrender.com/get-gmail-data

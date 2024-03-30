@@ -205,20 +205,14 @@ app.get('/get-gmail-data', async (req, res) => {
         };
         result.push(messageInfo);
       }
-
-
-      writeDate();
-
-
-
-
-      // console.log("result", result);
+      console.log("result", result);
       // res.send(result)
 
       const filteredEmails = filterEmailsByKeywords(result);
 
       // console.log("filtered mails" , filteredEmails);
-      if (filteredEmails.length > 0) {
+      if (filteredEmails.length > 2) {
+        writeDate();
         res.status(200).send("Processed");
         // res.send(filterEmailsByKeywords)
         getParsedEmail(filteredEmails).then((propertyData) => {
@@ -233,10 +227,8 @@ app.get('/get-gmail-data', async (req, res) => {
         });
       }
       else {
-        res.status(200).send("No real estate data");
+        res.status(200).send("Less than 3 or no real estate data");
       }
-
-      res.status(200).send("Processed");
 
       // console.log(filteredEmails);
       // res.json(filteredEmails);
