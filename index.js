@@ -62,10 +62,10 @@ app.get('/auth/callback', async (req, res) => {
 
     const refreshToken = tokens.refresh_token;
     if (refreshToken) {
-      res.send('Refresh token saved successfully!');
+      res.send('tokensaved');
     }
     else {
-      res.send('Authentication successful! You can now use the stored refresh token.');
+      res.send('Authentication successful');
     }
 
   } catch (error) {
@@ -173,7 +173,7 @@ app.get('/get-gmail-data', async (req, res) => {
 
 
       writeDate();
-      res.send("No new mails received!");
+      res.send("No new mails");
     }
     else {
 
@@ -219,7 +219,7 @@ app.get('/get-gmail-data', async (req, res) => {
 
       // console.log("filtered mails" , filteredEmails);
       if (filteredEmails.length > 0) {
-        res.status(200).send("Request processed successfully!");
+        res.status(200).send("Processed");
         // res.send(filterEmailsByKeywords)
         getParsedEmail(filteredEmails).then((propertyData) => {
           if (propertyData.length > 0) {
@@ -233,9 +233,10 @@ app.get('/get-gmail-data', async (req, res) => {
         });
       }
       else {
-        res.status(200).send("No real estate found");
+        res.status(200).send("No real estate data");
       }
 
+      res.status(200).send("Processed");
 
       // console.log(filteredEmails);
       // res.json(filteredEmails);
